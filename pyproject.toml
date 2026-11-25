@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bionetgen-tools"
+version = "0.1.0"
+description = "Sensitivity analysis, parameter estimation and stochastic simulation for BioNetGen models, using bngsim"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "bngsim[bngl]>=0.17.3",
+    "numpy",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "scikit-learn",
+]
+
+[project.optional-dependencies]
+notebooks = ["jupyter"]
+test = ["pytest"]
+
+[project.urls]
+Source = "https://github.com/RuleWorld/BioNetGen_tools"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -87,3 +87,21 @@ def test_sem_overrides_noise_parameter(problem):
     _, g = est2.compute_nllh_and_gradient(x_true)
     for name in ["sigma_BetaP2", "sigma_LynBoundU"]:
         assert g[est2.estimable_params.index(name)] == 0
+
+
+def test_gradient_with_proportional_noise(problem):
+    """A noise formula that reads an observable: the gradient chains through dO/dp too."""
+    est, x_true = problem
+    obs = est.observables_df.copy()
+    obs.loc[obs.observableId == "BetaP2", "noiseFormula"] = "sigma_BetaP2 * BetaP2 + 0.001"
+    est2 = ParameterEstimator(est.bngl_file, est.conditions_df, est.measurements_df, obs, est.parameters_df)
+    x = x_true.copy()
+    x[est2.estimable_params.index("sigma_BetaP2")] = np.log10(0.1)
+    x += 0.03
+    _, g = est2.compute_nllh_and_gradient(x)
+    h = 1e-5
+    for i, name in enumerate(est2.estimable_params):
+        e = np.zeros_like(x)
+        e[i] = h
+        fd = (est2.compute_nllh(x + e) - est2.compute_nllh(x - e)) / (2 * h)
+        assert g[i] == pytest.approx(fd, rel=1e-3, abs=1e-3), name

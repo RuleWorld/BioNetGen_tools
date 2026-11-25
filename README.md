@@ -1,5 +1,7 @@
 # BioNetGen_tools
 
+[![CI](https://github.com/RuleWorld/BioNetGen_tools/actions/workflows/ci.yml/badge.svg)](https://github.com/RuleWorld/BioNetGen_tools/actions/workflows/ci.yml)
+
 Python tools and Jupyter notebooks for common modeling tasks with BioNetGen models: simulation, local and global
 parameter sensitivity analysis, parameter estimation with identifiability analysis, and stochastic simulation. All
 simulations run with [bngsim](https://github.com/lanl/bngsim), which simulates BioNetGen language (BNGL), SBML and
@@ -72,7 +74,7 @@ to about one part in 10⁴. The one-at-a-time finite-difference method is still 
 The parameter estimator uses the same sensitivities to compute the exact gradient of the NLLH, passed through the PEtab
 observable and noise formulas by the chain rule. The gradient makes gradient-based multistart optimization practical
 (`ParameterEstimator.fit_multistart`). In notebook 03, ten L-BFGS-B starts reach a slightly lower NLLH than
-differential evolution with about 60% as many objective evaluations, although each of those evaluations also
+differential evolution with about a third as many objective evaluations, although each of those evaluations also
 computes sensitivities. The FIM is now computed from the
 sensitivities as the sum over data points of ∇y ∇yᵀ/σ². It is positive semidefinite by construction, so it has no
 negative eigenvalues, and it costs one sensitivity run per condition instead of about 2n² objective evaluations. The
@@ -83,6 +85,12 @@ a fine grid. Global sensitivity samples run in parallel threads. `write_bngl` no
 only the parameter values, so rules, comments and actions are kept. Stochastic simulation, replicate ensembles and
 network-free simulation are new.
 
+In the original notebook 03, each synthetic measurement recorded its noise as `SD;N` in `observableParameters`. The
+estimator then used SD/√N as the noise level and never read `sigma_BetaP2`, so the fitted noise parameter was
+arbitrary (the source of the large sigma errors the original guides set out to diagnose). The synthetic data now
+leave that field empty and use the noise model they were generated with, `sigma_BetaP2 * BetaP2 + 0.001`, so
+`sigma_BetaP2` is the relative error and is estimated (0.098 against a true 0.10).
+
 ## Tests
 
 ```bash
@@ -92,7 +100,9 @@ pytest
 
 The tests check bngsim's ODE solution of the FcεRI model against the libroadrunner trajectory the original notebooks
 produced (stored in `tests/data/`), analytic sensitivities and the NLLH gradient against finite differences, that SSA
-runs repeat from their seeds, and that NFsim runs.
+runs repeat from their seeds, and that NFsim runs. GitHub Actions runs the tests on Linux and macOS with Python 3.10
+and 3.13, and executes all four notebooks, on every push and pull request and once a week, so that a new bngsim
+release that breaks something is noticed.
 
 ## Citation
 
@@ -105,3 +115,7 @@ For PEtab, cite Schmiester, L. et al. PEtab: interoperable specification of para
 biology. PLoS Comput. Biol. 17, e1008646 (2021). The Ras model is described in Yonosh, K. A. and Faeder, J. R.
 Mathematical modeling predicts quantization of Ras activation in membrane corrals. Research Square preprint (2025),
 https://www.researchsquare.com/article/rs-7889340/v1.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

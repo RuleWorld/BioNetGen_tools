@@ -12,3 +12,7 @@ are not part of the `bionetgen_tools` package or its tests. They are kept for re
 
 They take a `ParameterEstimator` (and in some cases a `BNGLSimulator`) from `bionetgen_tools`, so they work with the
 bngsim version, but they have not been tested since the port.
+
+The poorly estimated noise parameter that `diagnose_sigma_issue.py` investigates had a simpler cause: the synthetic
+data supplied an SEM in `observableParameters`, which replaced the noise formula, so `sigma_BetaP2` never entered the
+likelihood. Notebook 03 no longer does this.

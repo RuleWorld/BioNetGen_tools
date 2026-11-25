@@ -425,7 +425,7 @@ class ParameterEstimator:
         fig, axes = plt.subplots(n_obs, n_cond, figsize=figsize, squeeze=False)
 
         for oi, obs_id in enumerate(unique_obs):
-            formula = self._obs_formulas[obs_id][0]
+            formula, noise_formula = self._obs_formulas[obs_id]
             for ci, (_, cond_row) in enumerate(self.conditions_df.iterrows()):
                 cond_id = cond_row["conditionId"]
                 ax = axes[oi, ci]
@@ -444,7 +444,15 @@ class ParameterEstimator:
                         ax.errorbar(data["time"], data["measurement"], yerr=sems, fmt="o",
                                     markersize=6, capsize=4, label="Data ± SEM")
                     else:
-                        ax.plot(data["time"], data["measurement"], "o", markersize=6, label="Data")
+                        # Error bars from the fitted noise model, at the nearest output time
+                        sigmas = [
+                            self._eval_observable_formula(
+                                noise_formula, res, param_dict,
+                                int(np.argmin(np.abs(res["time"] - t))))
+                            for t in data["time"]
+                        ]
+                        ax.errorbar(data["time"], data["measurement"], yerr=sigmas, fmt="o",
+                                    markersize=6, capsize=4, label="Data ± model σ")
                 ax.set_xlabel("Time", fontweight="bold")
                 ax.set_ylabel(obs_id, fontweight="bold")
                 ax.set_title(f"{cond_id}", fontweight="bold")
